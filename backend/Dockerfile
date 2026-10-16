@@ -13,9 +13,9 @@ RUN pip install --no-cache-dir uv \
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
-COPY expense_tracker ./expense_tracker
+COPY kanban_board ./kanban_board
 RUN chown -R app:app /app
 
 USER app
 
-CMD ["sh", "-c", "uvicorn expense_tracker.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+CMD ["sh", "-c", "uvicorn kanban_board.main:app --host 0.0.0.0 --port ${PORT:-8080}"]

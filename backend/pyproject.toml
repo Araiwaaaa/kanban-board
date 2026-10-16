@@ -1,7 +1,7 @@
 [project]
-name = "expense-tracker-api"
+name = "kanban-board-api"
 version = "0.1.0"
-description = "FastAPI backend for the expense tracker"
+description = "FastAPI backend for the Kanban board"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.143.2",
