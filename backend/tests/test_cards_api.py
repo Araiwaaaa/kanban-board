@@ -3,8 +3,8 @@ from collections.abc import Mapping
 import pytest
 from fastapi.testclient import TestClient
 
-from expense_tracker.dependencies import get_repository
-from expense_tracker.main import app
+from kanban_board.dependencies import get_repository
+from kanban_board.main import app
 
 
 CardData = Mapping[str, object]

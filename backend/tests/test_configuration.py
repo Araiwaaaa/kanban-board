@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
-import expense_tracker.dependencies as dependencies
-from expense_tracker.main import create_app
+import kanban_board.dependencies as dependencies
+from kanban_board.main import create_app
 
 
 def test_repository_selection_uses_card_in_memory_repository_when_credentials_are_missing(

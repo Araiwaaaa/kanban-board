@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from expense_tracker.main import app
+from kanban_board.main import app
 
 
 def test_health_check_returns_ok() -> None:
