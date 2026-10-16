@@ -22,6 +22,45 @@ export type ExpenseTotal = {
 
 const apiUrl = import.meta.env.VITE_API_URL
 
+async function responseError(response: Response): Promise<Error> {
+  const body = await response.text()
+  if (body) {
+    try {
+      const payload: unknown = JSON.parse(body)
+      if (typeof payload === 'object' && payload !== null && 'detail' in payload) {
+        const detail = payload.detail
+        if (typeof detail === 'string') {
+          return new Error(detail)
+        }
+        if (Array.isArray(detail)) {
+          const messages = detail.flatMap((item: unknown) => {
+            if (
+              typeof item === 'object' &&
+              item !== null &&
+              'msg' in item &&
+              typeof item.msg === 'string'
+            ) {
+              return [item.msg]
+            }
+            return []
+          })
+          if (messages.length > 0) {
+            return new Error(messages.join('; '))
+          }
+        }
+      }
+    } catch (parseError) {
+      if (!(parseError instanceof SyntaxError)) {
+        throw parseError
+      }
+    }
+  }
+
+  return new Error(
+    `API request failed: ${response.status} ${response.statusText}`,
+  )
+}
+
 async function request<T>(
   path: string,
   init?: RequestInit,
@@ -32,7 +71,7 @@ async function request<T>(
 
   const response = await fetch(`${apiUrl.replace(/\/+$/, '')}${path}`, init)
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} ${response.statusText}`)
+    throw await responseError(response)
   }
 
   return response.json() as Promise<T>
@@ -71,7 +110,7 @@ export async function deleteExpense(id: number): Promise<void> {
     { method: 'DELETE' },
   )
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} ${response.statusText}`)
+    throw await responseError(response)
   }
 }
 
