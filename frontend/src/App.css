@@ -256,6 +256,10 @@ h2 {
   border-top: 1px solid #edf0ec;
 }
 
+.expense-item.is-editing {
+  display: block;
+}
+
 .expense-item:first-child {
   padding-top: 2px;
   border-top: 0;
@@ -328,6 +332,88 @@ h2 {
   font-weight: 700;
 }
 
+.expense-actions,
+.edit-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.row-button {
+  min-height: 32px;
+  padding: 5px 9px;
+  border: 1px solid #dce5dc;
+  border-radius: 7px;
+  background: #fff;
+  color: #49624e;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.row-button:hover:not(:disabled) {
+  border-color: #9db19e;
+  background: #f4f8f3;
+}
+
+.row-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.delete-button {
+  border-color: #efdbd7;
+  color: #9a493d;
+}
+
+.delete-button:hover:not(:disabled) {
+  border-color: #ddb4ac;
+  background: #fff6f3;
+}
+
+.edit-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.edit-form .field {
+  font-size: 0.72rem;
+}
+
+.edit-form .field input,
+.edit-form .field select {
+  min-height: 38px;
+  padding: 7px 9px;
+  font-size: 0.8rem;
+}
+
+.edit-title-field {
+  grid-column: 1 / -1;
+}
+
+.edit-actions {
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  padding-top: 2px;
+}
+
+.save-button {
+  border-color: #2f5d3c;
+  background: #2f5d3c;
+  color: #fff;
+}
+
+.save-button:hover:not(:disabled) {
+  border-color: #244c30;
+  background: #244c30;
+}
+
+.cancel-button {
+  color: #59665b;
+}
+
 @media (max-width: 760px) {
   .page {
     width: min(100% - 32px, 560px);
@@ -361,6 +447,24 @@ h2 {
   }
 
   .field-wide {
+    grid-column: auto;
+  }
+
+  .expense-item:not(.is-editing) {
+    flex-wrap: wrap;
+  }
+
+  .expense-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .edit-form {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-title-field,
+  .edit-actions {
     grid-column: auto;
   }
 }

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import {
   createExpense,
+  deleteExpense,
   getTotal,
   listExpenses,
+  updateExpense,
   type Expense,
   type ExpenseCategory,
   type ExpenseInput,
@@ -59,6 +61,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoaded, setHasLoaded] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [editingExpenseId, setEditingExpenseId] = useState<number | null>(null)
+  const [editDraft, setEditDraft] = useState<ExpenseInput | null>(null)
+  const [busyExpenseId, setBusyExpenseId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [title, setTitle] = useState('')
   const [amount, setAmount] = useState('')
@@ -142,6 +147,81 @@ function App() {
       )
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  function startEditing(expense: Expense): void {
+    setEditingExpenseId(expense.id)
+    setEditDraft({
+      title: expense.title,
+      amount_baht: expense.amount_baht,
+      category: expense.category,
+      spent_on: expense.spent_on,
+    })
+    setError(null)
+  }
+
+  function cancelEditing(): void {
+    setEditingExpenseId(null)
+    setEditDraft(null)
+    setError(null)
+  }
+
+  async function handleUpdate(
+    event: React.FormEvent<HTMLFormElement>,
+    expenseId: number,
+  ): Promise<void> {
+    event.preventDefault()
+    if (!editDraft) return
+
+    const amountBaht = Number(editDraft.amount_baht)
+    if (!Number.isSafeInteger(amountBaht) || amountBaht < 1) {
+      setError('Amount must be a whole number of Baht greater than zero.')
+      return
+    }
+
+    setBusyExpenseId(expenseId)
+    setError(null)
+    try {
+      await updateExpense(expenseId, {
+        ...editDraft,
+        title: editDraft.title.trim(),
+        amount_baht: amountBaht,
+      })
+      await refreshExpenses()
+      setEditingExpenseId(null)
+      setEditDraft(null)
+    } catch (updateError) {
+      setError(
+        updateError instanceof Error
+          ? updateError.message
+          : 'Could not update the expense. Please try again.',
+      )
+    } finally {
+      setBusyExpenseId(null)
+    }
+  }
+
+  async function handleDelete(expenseId: number): Promise<void> {
+    if (!window.confirm('Delete this expense? This cannot be undone.')) return
+
+    setBusyExpenseId(expenseId)
+    setError(null)
+    try {
+      await deleteExpense(expenseId)
+      await refreshExpenses()
+      if (editingExpenseId === expenseId) {
+        setEditingExpenseId(null)
+        setEditDraft(null)
+      }
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : 'Could not delete the expense. Please try again.',
+      )
+    } finally {
+      setBusyExpenseId(null)
     }
   }
 
@@ -278,25 +358,148 @@ function App() {
             </p>
           ) : (
             <ul className="expense-list">
-              {expenses.map((expense) => (
-                <li className="expense-item" key={expense.id}>
-                  <div className="expense-main">
-                    <span className="category-mark" aria-hidden="true" />
-                    <div className="expense-description">
-                      <span className="expense-title">{expense.title}</span>
-                      <span className="expense-meta">
-                        <span className="category-pill">{expense.category}</span>
-                        <time dateTime={expense.spent_on}>
-                          {formatExpenseDate(expense.spent_on)}
-                        </time>
-                      </span>
-                    </div>
-                  </div>
-                  <span className="expense-amount">
-                    {formatBaht(expense.amount_baht)}
-                  </span>
-                </li>
-              ))}
+              {expenses.map((expense) => {
+                const isEditing = editingExpenseId === expense.id
+                const isBusy = busyExpenseId === expense.id
+                const hasPendingRequest = busyExpenseId !== null
+
+                return (
+                  <li
+                    className={`expense-item${isEditing ? ' is-editing' : ''}`}
+                    key={expense.id}
+                  >
+                    {isEditing && editDraft ? (
+                      <form
+                        className="edit-form"
+                        onSubmit={(event) => void handleUpdate(event, expense.id)}
+                      >
+                        <label className="field edit-title-field">
+                          <span>Title</span>
+                          <input
+                            autoComplete="off"
+                            maxLength={200}
+                            required
+                            value={editDraft.title}
+                            onChange={(event) =>
+                              setEditDraft({
+                                ...editDraft,
+                                title: event.target.value,
+                              })
+                            }
+                          />
+                        </label>
+                        <label className="field">
+                          <span>Amount (Baht)</span>
+                          <input
+                            inputMode="numeric"
+                            min="1"
+                            required
+                            step="1"
+                            type="number"
+                            value={editDraft.amount_baht}
+                            onChange={(event) =>
+                              setEditDraft({
+                                ...editDraft,
+                                amount_baht: Number(event.target.value),
+                              })
+                            }
+                          />
+                        </label>
+                        <label className="field">
+                          <span>Category</span>
+                          <select
+                            value={editDraft.category}
+                            onChange={(event) =>
+                              setEditDraft({
+                                ...editDraft,
+                                category: event.target.value as ExpenseCategory,
+                              })
+                            }
+                          >
+                            {categories.map((item) => (
+                              <option key={item} value={item}>
+                                {item}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="field">
+                          <span>Date spent</span>
+                          <input
+                            max={today}
+                            required
+                            type="date"
+                            value={editDraft.spent_on}
+                            onChange={(event) =>
+                              setEditDraft({
+                                ...editDraft,
+                                spent_on: event.target.value,
+                              })
+                            }
+                          />
+                        </label>
+                        <div className="edit-actions">
+                          <button
+                            className="row-button save-button"
+                            disabled={hasPendingRequest}
+                            type="submit"
+                          >
+                            {isBusy ? 'Saving…' : 'Save'}
+                          </button>
+                          <button
+                            className="row-button cancel-button"
+                            disabled={hasPendingRequest}
+                            onClick={cancelEditing}
+                            type="button"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <>
+                        <div className="expense-main">
+                          <span className="category-mark" aria-hidden="true" />
+                          <div className="expense-description">
+                            <span className="expense-title">{expense.title}</span>
+                            <span className="expense-meta">
+                              <span className="category-pill">
+                                {expense.category}
+                              </span>
+                              <time dateTime={expense.spent_on}>
+                                {formatExpenseDate(expense.spent_on)}
+                              </time>
+                            </span>
+                          </div>
+                        </div>
+                        <span className="expense-amount">
+                          {formatBaht(expense.amount_baht)}
+                        </span>
+                        <div className="expense-actions">
+                          <button
+                            className="row-button"
+                            disabled={
+                              hasPendingRequest || editingExpenseId !== null
+                            }
+                            onClick={() => startEditing(expense)}
+                            type="button"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="row-button delete-button"
+                            disabled={hasPendingRequest}
+                            onClick={() => void handleDelete(expense.id)}
+                            type="button"
+                          >
+                            {isBusy ? 'Deleting…' : 'Delete'}
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
           )}
         </section>
