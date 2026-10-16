@@ -1,20 +1,17 @@
-# Expense Tracking
+# Kanban Board
 
-The expense-tracking context records one person's spending and summarizes the amount spent.
+The Kanban board context helps one person keep track of cards as work progresses through a board.
 
 ## Language
 
-**Expense**:
-A record of money spent, described by a title, amount, category, and date.
+**Board**:
+The single workspace that holds the person's cards and their current statuses.
 
-**Expense amount**:
-The positive number of whole Thai Baht spent for an expense.
+**Column**:
+One of the three status groups on the board: To do, Doing, or Done.
 
-**Expense category**:
-The classification of an expense: Food, Transport, Bills, Shopping, or Other.
+**Card**:
+A task represented on the board by a required title.
 
-**Expense date**:
-The calendar date on which the money was spent.
-
-**Expense total**:
-The sum of the amounts of all recorded expenses.
+**Status**:
+The state of a card as it progresses through work: `todo`, `doing`, or `done`.
