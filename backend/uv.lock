@@ -276,6 +276,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "supabase" },
+    { name = "uvicorn" },
 ]
 
 [package.dev-dependencies]
@@ -283,13 +284,13 @@ dev = [
     { name = "httpx" },
     { name = "pytest" },
     { name = "python-dotenv" },
-    { name = "uvicorn" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "fastapi", specifier = ">=0.143.2" },
     { name = "supabase", specifier = ">=2.33.0" },
+    { name = "uvicorn", specifier = ">=0.54.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -297,7 +298,6 @@ dev = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "python-dotenv", specifier = ">=1.2.4" },
-    { name = "uvicorn", specifier = ">=0.54.0" },
 ]
 
 [[package]]
