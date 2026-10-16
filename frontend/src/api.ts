@@ -1,23 +1,9 @@
-export type ExpenseCategory =
-  | 'Food'
-  | 'Transport'
-  | 'Bills'
-  | 'Shopping'
-  | 'Other'
+export type Status = 'todo' | 'doing' | 'done'
 
-export type Expense = {
+export type Card = {
   id: number
   title: string
-  amount_baht: number
-  category: ExpenseCategory
-  spent_on: string
-}
-
-export type ExpenseInput = Omit<Expense, 'id'>
-
-export type ExpenseTotal = {
-  total_baht: number
-  currency: 'THB'
+  status: Status
 }
 
 const apiUrl = import.meta.env.VITE_API_URL
@@ -61,10 +47,7 @@ async function responseError(response: Response): Promise<Error> {
   )
 }
 
-async function request<T>(
-  path: string,
-  init?: RequestInit,
-): Promise<T> {
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!apiUrl) {
     throw new Error('VITE_API_URL is not configured')
   }
@@ -73,47 +56,38 @@ async function request<T>(
   if (!response.ok) {
     throw await responseError(response)
   }
-
   return response.json() as Promise<T>
 }
 
-export function listExpenses(): Promise<Expense[]> {
-  return request<Expense[]>('/expenses')
+export function listCards(): Promise<Card[]> {
+  return request<Card[]>('/cards')
 }
 
-export function createExpense(expense: ExpenseInput): Promise<Expense> {
-  return request<Expense>('/expenses', {
+export function createCard(title: string): Promise<Card> {
+  return request<Card>('/cards', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(expense),
+    body: JSON.stringify({ title }),
   })
 }
 
-export function updateExpense(
-  id: number,
-  expense: ExpenseInput,
-): Promise<Expense> {
-  return request<Expense>(`/expenses/${id}`, {
-    method: 'PUT',
+export function moveCard(id: number, status: Status): Promise<Card> {
+  return request<Card>(`/cards/${id}`, {
+    method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(expense),
+    body: JSON.stringify({ status }),
   })
 }
 
-export async function deleteExpense(id: number): Promise<void> {
+export async function deleteCard(id: number): Promise<void> {
   if (!apiUrl) {
     throw new Error('VITE_API_URL is not configured')
   }
 
-  const response = await fetch(
-    `${apiUrl.replace(/\/+$/, '')}/expenses/${id}`,
-    { method: 'DELETE' },
-  )
+  const response = await fetch(`${apiUrl.replace(/\/+$/, '')}/cards/${id}`, {
+    method: 'DELETE',
+  })
   if (!response.ok) {
     throw await responseError(response)
   }
-}
-
-export function getTotal(): Promise<ExpenseTotal> {
-  return request<ExpenseTotal>('/expenses/total')
 }
