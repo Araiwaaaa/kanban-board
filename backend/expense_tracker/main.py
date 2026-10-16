@@ -1,11 +1,26 @@
+import os
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 
 from expense_tracker.dependencies import ExpenseRepository, get_repository
 from expense_tracker.models import Expense, ExpenseInput, ExpenseTotal
 
-app = FastAPI()
+
+def create_app() -> FastAPI:
+    application = FastAPI()
+    allowed_origin = os.getenv("ALLOWED_ORIGIN")
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=[allowed_origin] if allowed_origin else [],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    return application
+
+
+app = create_app()
 
 
 @app.post("/expenses", response_model=Expense, status_code=status.HTTP_201_CREATED)
@@ -13,7 +28,7 @@ def create_expense(
     expense: ExpenseInput,
     repository: Annotated[ExpenseRepository, Depends(get_repository)],
 ) -> Expense:
-    created = repository.create_expense(expense.model_dump())
+    created = repository.create_expense(expense.model_dump(mode="json"))
     return Expense.model_validate(created)
 
 
@@ -41,7 +56,9 @@ def update_expense(
     expense: ExpenseInput,
     repository: Annotated[ExpenseRepository, Depends(get_repository)],
 ) -> Expense:
-    updated = repository.update_expense(expense_id, expense.model_dump())
+    updated = repository.update_expense(
+        expense_id, expense.model_dump(mode="json")
+    )
     if updated is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Expense not found"

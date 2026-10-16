@@ -31,6 +31,7 @@ class ExpenseInput(BaseModel):
 
 class Expense(ExpenseInput):
     id: int
+    created_at: datetime | None = Field(default=None, exclude=True)
 
 
 class ExpenseTotal(BaseModel):
