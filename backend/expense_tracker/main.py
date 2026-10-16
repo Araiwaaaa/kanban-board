@@ -23,6 +23,11 @@ def create_app() -> FastAPI:
 app = create_app()
 
 
+@app.get("/health")
+def health_check() -> dict[str, str]:
+    return {"status": "ok"}
+
+
 @app.post("/expenses", response_model=Expense, status_code=status.HTTP_201_CREATED)
 def create_expense(
     expense: ExpenseInput,
