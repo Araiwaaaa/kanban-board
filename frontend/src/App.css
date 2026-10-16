@@ -208,6 +208,8 @@ h1 {
 }
 
 .card {
+  display: grid;
+  gap: 12px;
   padding: 13px 14px;
   border: 1px solid #e3e8e2;
   border-radius: 9px;
@@ -217,6 +219,45 @@ h1 {
   font-size: 0.88rem;
   line-height: 1.45;
   overflow-wrap: anywhere;
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.card-action-button {
+  min-height: 29px;
+  padding: 5px 8px;
+  border: 1px solid #d7e1d7;
+  border-radius: 6px;
+  background: #f8faf7;
+  color: #49634e;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+.card-action-button:hover:not(:disabled) {
+  border-color: #a3b7a4;
+  background: #edf4ec;
+}
+
+.card-action-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.delete-card-button {
+  border-color: #ebd8d4;
+  color: #955147;
+}
+
+.delete-card-button:hover:not(:disabled) {
+  border-color: #ddb8b0;
+  background: #fff4f1;
 }
 
 .visually-hidden {

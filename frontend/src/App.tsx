@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
-import { createCard, listCards, type Card, type Status } from './api'
+import {
+  createCard,
+  deleteCard,
+  listCards,
+  moveCard,
+  type Card,
+  type Status,
+} from './api'
 import './App.css'
 
 const columns: { status: Status; title: string }[] = [
@@ -14,6 +21,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoaded, setHasLoaded] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
+  const [pendingCardId, setPendingCardId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -72,6 +80,44 @@ function App() {
       )
     } finally {
       setIsAdding(false)
+    }
+  }
+
+  async function handleMove(card: Card, status: Status): Promise<void> {
+    setPendingCardId(card.id)
+    setError(null)
+    try {
+      await moveCard(card.id, status)
+      await refreshCards()
+    } catch (moveError) {
+      setError(
+        moveError instanceof Error
+          ? moveError.message
+          : 'Could not move the card. Please try again.',
+      )
+    } finally {
+      setPendingCardId(null)
+    }
+  }
+
+  async function handleDelete(card: Card): Promise<void> {
+    if (!window.confirm(`Delete "${card.title}"? This cannot be undone.`)) {
+      return
+    }
+
+    setPendingCardId(card.id)
+    setError(null)
+    try {
+      await deleteCard(card.id)
+      await refreshCards()
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : 'Could not delete the card. Please try again.',
+      )
+    } finally {
+      setPendingCardId(null)
     }
   }
 
@@ -152,6 +198,31 @@ function App() {
                     {columnCards.map((card) => (
                       <li className="card" key={card.id}>
                         <span>{card.title}</span>
+                        <div className="card-actions">
+                          {columns
+                            .filter((destination) => destination.status !== card.status)
+                            .map((destination) => (
+                              <button
+                                className="card-action-button"
+                                disabled={pendingCardId !== null}
+                                key={destination.status}
+                                onClick={() =>
+                                  void handleMove(card, destination.status)
+                                }
+                                type="button"
+                              >
+                                Move to {destination.title}
+                              </button>
+                            ))}
+                          <button
+                            className="card-action-button delete-card-button"
+                            disabled={pendingCardId !== null}
+                            onClick={() => void handleDelete(card)}
+                            type="button"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>
